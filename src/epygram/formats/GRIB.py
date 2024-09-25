@@ -75,6 +75,8 @@ class LowLevelGRIB(object):
             self._index_select = gribapi.grib_index_select
             self.new_from_index = gribapi.grib_new_from_index
             self.index_release = gribapi.grib_index_release
+            self.index_read = gribapi.grib_index_read
+            self.index_write = gribapi.grib_index_write
             self.InternalError = gribapi.GribInternalError
             self.version = gribapi.__version__
         elif self.api_name == 'eccodes':
@@ -104,6 +106,8 @@ class LowLevelGRIB(object):
             self.index_release = eccodes.codes_index_release
             self.InternalError = eccodes.CodesInternalError
             self.version = eccodes.__version__
+            self.index_read = eccodes.codes_index_read
+            self.index_write = eccodes.codes_index_write
 
     @property
     def install_dir(self):
@@ -2258,6 +2262,7 @@ class GRIB(FileResource):
                 raise IOError("this resource is not a GRIB one.")
         if not self.fmtdelayedopen:
             self.open()
+        self._idxFile=None
 
     def __iter__(self):
         self.close()
@@ -2539,7 +2544,7 @@ class GRIB(FileResource):
                   getdata=True,
                   footprints_proxy_as_builder=config.footprints_proxy_as_builder,
                   get_info_as_json=None,
-                  read_misc_metadata=griberies.defaults.GRIB2_metadata_to_embark):
+                  read_misc_metadata=griberies.defaults.GRIB2_metadata_to_embark,make_index=None):
         """
         Finds in GRIB the message that correspond to the *handgrip*,
         and returns it as a :class:`epygram.base.Field`.
@@ -2560,6 +2565,10 @@ class GRIB(FileResource):
             .. deprecated:: 1.3.9
         :param read_misc_metadata: read the specified keys, and store it in
             field.misc_metadata
+        :param make_index allow to create an index to improve the reading of many fields in the same grib file.
+            By default it's None and this routine keep the same behaviour has it uses to.
+            It you pass a grib parameter list inside make_index, on the first time a field is read, an index indexing the given list will be created,
+            then reused the next time. It will drastically speed up multiple fields reading, especially on GRIBs containing many fields
         """
         if isinstance(handgrip, six.string_types):
             handgrip = griberies.parse_GRIBstr_todict(handgrip)
@@ -2567,7 +2576,7 @@ class GRIB(FileResource):
                                          getdata=getdata,
                                          footprints_proxy_as_builder=footprints_proxy_as_builder,
                                          get_info_as_json=get_info_as_json,
-                                         read_misc_metadata=read_misc_metadata)
+                                         read_misc_metadata=read_misc_metadata,make_index=make_index)
         # filter out those unfiltered by the below GRIBAPI bug
         filtered_matchingfields = FieldSet()
         for field in matchingfields:
@@ -2589,7 +2598,7 @@ class GRIB(FileResource):
                    getdata=True,
                    footprints_proxy_as_builder=config.footprints_proxy_as_builder,
                    get_info_as_json=None,
-                   read_misc_metadata=griberies.defaults.GRIB2_metadata_to_embark):
+                   read_misc_metadata=griberies.defaults.GRIB2_metadata_to_embark,make_index=None):
         """
         Finds in GRIB the message(s) that correspond to the *handgrip*,
         and returns it as a :class:`epygram.base.FieldSet` of
@@ -2613,17 +2622,43 @@ class GRIB(FileResource):
         if isinstance(handgrip, six.string_types):
             handgrip = griberies.parse_GRIBstr_todict(handgrip)
         matchingfields = FieldSet()
-        filtering_keys = [str(k) for k in handgrip.keys()]  # gribapi str/unicode incompatibility
-        for i, k in enumerate(filtering_keys):
-            if isinstance(handgrip[k], int):
-                filtering_keys[i] = str(k + ':l')  # force key to be selected as int
-        idx = lowlevelgrib.index_new_from_file(self._open_through,
+
+        if make_index:
+            if self._idxFile:
+                #the index has been generated so let's reuse it
+                idx=lowlevelgrib.index_read(self._idxFile)
+            else:
+                #it is the first time, so we need to generate the index using make_index list
+                idx = lowlevelgrib.index_new_from_file(self._open_through,make_index)
+                indexPath="{}.index".format(self._open_through)
+                lowlevelgrib.index_write(idx,indexPath)
+                self._idxFile=indexPath
+        else:
+            #compute filtering_key using handgrip
+            filtering_keys = [str(k) for k in handgrip.keys()]  # gribapi str/unicode incompatibility
+            for i, k in enumerate(filtering_keys):
+                if isinstance(handgrip[k], int):
+                    filtering_keys[i] = str(k + ':l')  # force key to be selected as int
+            idx = lowlevelgrib.index_new_from_file(self._open_through,
                                                filtering_keys)
-        # filter
-        for k, v in handgrip.items():
-            if isinstance(v, six.string_types):  # gribapi str/unicode incompatibility
-                v = str(v)
-            lowlevelgrib.index_select(idx, k, v)
+       
+        if make_index:
+            # we must select for all keys present inside make_index
+            for k in make_index:
+                k=k.split(':')[0] #here we dont want :l stuff
+                if k in handgrip.keys(): 
+                    if isinstance(handgrip[k], six.string_types):  # gribapi str/unicode incompatibility
+                        lowlevelgrib.index_select(idx, k, str(handgrip[k]))
+                    else:
+                        lowlevelgrib.index_select(idx, k, handgrip[k])
+                else:
+                    lowlevelgrib.index_select(idx, k, 'undef') #need to specify something here
+        else:
+            # filter
+            for k, v in handgrip.items():
+                if isinstance(v, six.string_types):  # gribapi str/unicode incompatibility
+                    v = str(v)
+                lowlevelgrib.index_select(idx, k, v)
         # load messages
         while True:
             gid = lowlevelgrib.new_from_index(idx)
