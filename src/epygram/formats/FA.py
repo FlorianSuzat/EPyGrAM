@@ -301,8 +301,7 @@ class FA(FileResource):
                 if cls.sfxflddesc.is_metadata(fieldname):
                     ftype = cls.sfxflddesc.get(fieldname).get('type')
             else:
-                if cls.sfxflddesc.is_metadata(fieldname):
-                    ftype = '?'
+                ftype = '?'
         return ftype
 
     def __init__(self, *args, **kwargs):
@@ -445,7 +444,7 @@ class FA(FileResource):
             tmplist = self.listfields()
             for f in tmplist:
                 if fieldtypeslist == [] or\
-                   self._field_type_from_file(f) in fieldtypeslist:
+                   self.field_type(f) in fieldtypeslist:
                     fieldslist.append(f)
         elif isinstance(seed, str):
             h = (hash(seed), hash(tuple(self.listfields())))
@@ -454,7 +453,7 @@ class FA(FileResource):
             tmplist = self._cache_find_re_in_list[h]
             for f in tmplist:
                 if fieldtypeslist == [] or\
-                   self._field_type_from_file(f) in fieldtypeslist:
+                   self.field_type(f) in fieldtypeslist:
                     fieldslist.append(f)
         elif isinstance(seed, list):
             tmplist = []
@@ -465,7 +464,7 @@ class FA(FileResource):
                 tmplist += self._cache_find_re_in_list[h]
             for f in tmplist:
                 if fieldtypeslist == [] or\
-                   self._field_type_from_file(f) in fieldtypeslist:
+                   self.field_type(f) in fieldtypeslist:
                     fieldslist.append(f)
         if fieldslist == []:
             raise epygramError("no field matching: " + str(seed) +
@@ -563,7 +562,7 @@ class FA(FileResource):
         for f in self.listfields():
             info = self.gribdef.FA2GRIB(f)
             # separate H2D from Misc
-            if self._field_type_from_file(f) == 'H2D':
+            if self.field_type(f) == 'H2D':
                 # separate 3D from 2D
                 if info['typeOfFirstFixedSurface'] in (119, 100, 103, 109, 20):
                     re_ok = re_3D.match(f)
@@ -627,6 +626,17 @@ class FA(FileResource):
         return encoding
 
     @FileResource._openbeforedelayed
+    def field_type(self, fieldname):
+        """Return type of the field, based on FANION and/or sfxflddesc_mod"""
+        from_fanion = self._field_type_from_file(fieldname)
+        from_sfxflddesc = self.field_type_from_sfxflddesc(fieldname)
+        if from_sfxflddesc == "?":
+            # unknown to sfxflddesc, we believe fanion
+            return from_fanion
+        else:
+            return from_sfxflddesc
+
+    @FileResource._openbeforedelayed
     def readfield(self, fieldname,
                   getdata=True,
                   footprints_proxy_as_builder=config.footprints_proxy_as_builder):
@@ -646,7 +656,7 @@ class FA(FileResource):
         assert fieldname in self.listfields(), ' '.join(["field",
                                                          str(fieldname),
                                                          "not found in resource."])
-        if self._field_type_from_file(fieldname) == 'H2D':
+        if self.field_type(fieldname) == 'H2D':
             field = self._readH2DField(fieldname,
                                        getdata=getdata,
                                        footprints_proxy_as_builder=footprints_proxy_as_builder)
@@ -1403,7 +1413,7 @@ class FA(FileResource):
         :param sortfields: **True** if the fields have to be sorted by type.
         """
         for f in self.listfields():
-            if self._field_type_from_file(f) == 'H2D':
+            if self.field_type(f) == 'H2D':
                 first_H2DField = f
                 break
         if len(self.listfields()) == 0:
@@ -1458,7 +1468,7 @@ class FA(FileResource):
                                    compressionline)
         out.write(separation_line)
         for f in listoffields:
-            if details is not None and self._field_type_from_file(f) == 'H2D':
+            if details is not None and self.field_type(f) == 'H2D':
                 encoding = self.fieldencoding(f)
                 if details == 'spectral':
                     write_formatted_fields(out, f, encoding['spectral'])
