@@ -1962,28 +1962,28 @@ class GRIBmessage(RecursiveObject, dict):
                self['jScansPositively'] == 0 and \
                self['jPointsAreConsecutive'] == 0:
                 if isinstance(values, numpy.ma.MaskedArray):
-                    data1d = values[:, :].compressed()
+                    data1d = values[::-1, :].compressed()
                 else:
                     data1d = values[::-1, :].flatten(order='C')
             elif self['iScansNegatively'] == 0 and \
                  self['jScansPositively'] == 1 and \
                  self['jPointsAreConsecutive'] == 0:
                 if isinstance(values, numpy.ma.MaskedArray):
-                    data1d = values[::-1, :].compressed()
+                    data1d = values[:, :].compressed()
                 else:
                     data1d = values[:, :].flatten(order='C')
             elif self['iScansNegatively'] == 1 and \
                  self['jScansPositively'] == 0 and \
                  self['jPointsAreConsecutive'] == 0:
                 if isinstance(values, numpy.ma.MaskedArray):
-                    data1d = values[:, ::-1].compressed()
+                    data1d = values[::-1, ::-1].compressed()
                 else:
                     data1d = values[::-1, ::-1].flatten(order='C')
             elif self['iScansNegatively'] == 1 and \
                  self['jScansPositively'] == 1 and \
                  self['jPointsAreConsecutive'] == 0:
                 if isinstance(values, numpy.ma.MaskedArray):
-                    data1d = values[::-1, ::-1].compressed()
+                    data1d = values[:, ::-1].compressed()
                 else:
                     data1d = values[:, ::-1].flatten(order='C')
             else:
