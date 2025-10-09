@@ -305,7 +305,7 @@ def get_args():
     else:
         args.refname = args.refname
         args.diffonly = False
-    args.diffmode = refname is not None
+    args.diffmode = args.refname is not None
     if args.zone in ('C', 'CI'):
         args.subzone = args.zone
     elif args.zone == 'CIE':
