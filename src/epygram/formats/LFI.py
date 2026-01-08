@@ -1231,6 +1231,8 @@ class LFI(FileResource):
         def k(latin2):
             latin1 = lat0
             m1 = math.cos(math.radians(latin1))
+            if isinstance(latin2, numpy.ndarray) and len(latin2) == 1:
+                latin2 = latin2[0]
             m2 = math.cos(math.radians(latin2))
             t1 = math.tan(math.pi / 4. - math.radians(latin1) / 2.)
             t2 = math.tan(math.pi / 4. - math.radians(latin2) / 2.)
