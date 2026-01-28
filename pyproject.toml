@@ -34,7 +34,7 @@ dependencies = [
     "ectrans4py==1.6.0",
     "falfilfa4py==1.0.7",  # ! consistency with eccodes !
     "footprints",
-    "netCDF4",
+    "netCDF4==1.7.2",  #FIXME: issue with newer versions not being properly installed on some (old) platforms
     "numpy",
     "pyproj",
     "pytest",
