@@ -938,9 +938,9 @@ class FA(FileResource):
                 levels = len(self.geometry.vcoordinate.grid['gridlevels'])
                 s = self.geometry.vcoordinate.grid['gridlevels']
                 f = field.geometry.vcoordinate.grid['gridlevels']
-                diffmax = max(numpy.array([s[k][1]['Ai'] - f[k][1]['Ai']
+                diffmax = max(numpy.array([abs(s[k][1]['Ai'] - f[k][1]['Ai'])
                                            for k in range(levels)]).max(),
-                              numpy.array([s[k][1]['Bi'] - f[k][1]['Bi']
+                              numpy.array([abs(s[k][1]['Bi'] - f[k][1]['Bi'])
                                            for k in range(levels)]).max())
             else:
                 diffmax = 0.
