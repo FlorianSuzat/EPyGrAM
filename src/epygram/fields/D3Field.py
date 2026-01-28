@@ -2097,7 +2097,8 @@ class D3Field(_D3CommonField):
         :param subzone: optional, among ('C', 'CI'), for LAM fields only,
                         returns the data resp. on the C or C+I zone.
                         Default is no subzone, i.e. the whole field.
-        :param d4: - if True,  returned values are shaped in a 4 dimensions array
+        :param d4: - if True,  returned values are shaped in a 4 dimensions
+                     array
                    - if False, shape of returned values is determined with
                      respect to geometry.
 
@@ -2117,7 +2118,8 @@ class D3Field(_D3CommonField):
             if self.geometry.grid.get('LAMzone') is not None:
                 data = self.geometry.extract_subzone(data, subzone)
             else:
-                raise epygramError("*subzone* cannot be provided for this field.")
+                raise epygramError(
+                    "*subzone* cannot be provided for this field.")
         if not d4:
             data = data.squeeze()
 
@@ -2239,7 +2241,8 @@ class D3Field(_D3CommonField):
             data = data.reshape(shp)"""
         super(D3Field, self).setdata(data)
 
-    data = property(getdata, setdata, Field.deldata, "Accessor to the field data.")
+    data = property(getdata, setdata, Field.deldata,
+                    "Accessor to the field data.")
 
     def select_subzone(self, subzone):
         """
@@ -2251,7 +2254,8 @@ class D3Field(_D3CommonField):
         """
         if self.geometry.grid.get('LAMzone') is not None:
             data = self.getdata(subzone=subzone)
-            self._attributes['geometry'] = self.geometry.select_subzone(subzone)
+            geom = self.geometry.select_subzone(subzone)
+            self._attributes['geometry'] = geom
             self.setdata(data)
 
     def getvalue_ij(self, i=None, j=None, k=None, t=None,

@@ -342,28 +342,28 @@ class ProjectedGeometry(RectangularGridGeometry):
         if self.grid.get('LAMzone') is not None:
             newgeom = self.deepcopy()
             if subzone == 'CI':
-                io = self.dimensions.get('X_CIoffset', 0)
-                jo = self.dimensions.get('Y_CIoffset', 0)
-                centerPoint = (io + (float(self.dimensions['X_CIzone']) - 1) / 2.,
-                               jo + (float(self.dimensions['Y_CIzone']) - 1) / 2.)  # Coordinates of center point
+                # Coordinates of center point
+                cpoint = ((float(self.dimensions['X_CIzone']) - 1) / 2.,
+                          (float(self.dimensions['Y_CIzone']) - 1) / 2.)
                 newgeom.grid['LAMzone'] = subzone
-                newgeom.dimensions = {'X':self.dimensions['X_CIzone'],
-                                      'Y':self.dimensions['Y_CIzone'],
-                                      'X_CIzone':self.dimensions['X_CIzone'],
-                                      'Y_CIzone':self.dimensions['Y_CIzone'],
-                                      'X_Iwidth':self.dimensions['X_Iwidth'],
-                                      'Y_Iwidth':self.dimensions['Y_Iwidth'],
-                                      'X_Czone':self.dimensions['X_Czone'],
-                                      'Y_Czone':self.dimensions['Y_Czone']}
+                newgeom.dimensions = {'X': self.dimensions['X_CIzone'],
+                                      'Y': self.dimensions['Y_CIzone'],
+                                      'X_CIzone': self.dimensions['X_CIzone'],
+                                      'Y_CIzone': self.dimensions['Y_CIzone'],
+                                      'X_Iwidth': self.dimensions['X_Iwidth'],
+                                      'Y_Iwidth': self.dimensions['Y_Iwidth'],
+                                      'X_Czone': self.dimensions['X_Czone'],
+                                      'Y_Czone': self.dimensions['Y_Czone']}
             elif subzone == 'C':
-                centerPoint = ((float(self.dimensions['X_Czone']) - 1) / 2.,
-                               (float(self.dimensions['Y_Czone']) - 1) / 2.)  # Coordinates of center point
+                # Coordinates of center point
+                cpoint = ((float(self.dimensions['X_Czone']) - 1) / 2.,
+                          (float(self.dimensions['Y_Czone']) - 1) / 2.)
                 newgeom.grid['LAMzone'] = None
-                newgeom.dimensions = {'X':self.dimensions['X_Czone'],
-                                      'Y':self.dimensions['Y_Czone']}
+                newgeom.dimensions = {'X': self.dimensions['X_Czone'],
+                                      'Y': self.dimensions['Y_Czone']}
             newgeom.grid['input_lon'] = self._center_lon
             newgeom.grid['input_lat'] = self._center_lat
-            newgeom.grid['input_position'] = centerPoint
+            newgeom.grid['input_position'] = cpoint
         else:
             newgeom = self
 
