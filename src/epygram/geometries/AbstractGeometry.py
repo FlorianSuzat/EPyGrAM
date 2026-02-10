@@ -99,11 +99,13 @@ class Geometry(RecursiveObject):
         return {(True, True, True): '3D',
                 (True, True, False): 'H2D',
                 (True, False, False): 'H1D',
+                (False, True, False): 'H1D',
                 (False, False, False): 'Point',
                 (True, False, True): 'V2D',
+                (False, True, True): 'V2D',
                 (False, False, True): 'V1D',
                }[(has_i, has_j, has_k)]
-        
+
     @property
     def rectangular_grid(self):
         """ Is the grid rectangular ? """
@@ -125,7 +127,7 @@ class Geometry(RecursiveObject):
         elif self.structure == "H2D":
             return {'k': False, 'j':True, 'i':True}
         elif self.structure == "H1D":
-            return {'k':False, 'j':False, 'i':True}
+            return {'k':False, 'j':True, 'i':False}
         elif self.structure == "V1D":
             return {'k': True, 'j':False, 'i':False}
         elif self.structure == "Point":
@@ -826,7 +828,6 @@ class RectangularGridGeometry(Geometry):
             elif self.grid['LAMzone'] == 'CI':
                 dimX = self.dimensions['X'] - 2 * self.dimensions['X_Iwidth']
                 dimY = self.dimensions['Y'] - 2 * self.dimensions['Y_Iwidth']
-
         if force_dimZ is not None:
             dimZ = force_dimZ
         else:

@@ -32,7 +32,7 @@ from epygram.geometries import (Geometry, SpectralGeometry, ProjectedGeometry, G
                                 RegLLGeometry, VGeometry, AcademicGeometry, truncation_from_gridpoint_dims)
 from epygram.geometries.VGeometry import (hybridP2pressure, hybridP2altitude,
                                           pressure2altitude)
-from epygram.fields import MiscField, H2DField
+from epygram.fields import MiscField, H2DField, H1DField
 from epygram.formats.fafields import SfxFldDesc_Mod, get_generic_fid
 from epygram.extra.griberies.definitions.fa import fagribdef
 
@@ -638,8 +638,7 @@ class FA(FileResource):
 
     @FileResource._openbeforedelayed
     def readfield(self, fieldname,
-                  getdata=True,
-                  footprints_proxy_as_builder=config.footprints_proxy_as_builder):
+                  getdata=True):
         """
         Reads one field, given its FA name, and returns a Field instance.
         Interface to Fortran routines from 'ifsaux'.
@@ -647,8 +646,6 @@ class FA(FileResource):
         :param fieldname: FA fieldname
         :param getdata: if *False*, only metadata are read, the field do not
           contain data.
-        :param footprints_proxy_as_builder: if *True*, uses footprints.proxy
-          to build fields.
         """
         if self.openmode == 'w':
             raise epygramError("cannot read fields in resource if with" +
@@ -658,16 +655,14 @@ class FA(FileResource):
                                                          "not found in resource."])
         if self.field_type(fieldname) == 'H2D':
             field = self._readH2DField(fieldname,
-                                       getdata=getdata,
-                                       footprints_proxy_as_builder=footprints_proxy_as_builder)
+                                       getdata=getdata)
         else:
             field = self._readMiscField(fieldname, getdata=getdata)
         return field
 
     @FileResource._openbeforedelayed
     def _readH2DField(self, fieldname,
-                      getdata=True,
-                      footprints_proxy_as_builder=config.footprints_proxy_as_builder):
+                      getdata=True):
         """
         Reads one H2D field, given its FA name, and returns a Field instance.
         Interface to Fortran routine FACILO.
@@ -675,13 +670,9 @@ class FA(FileResource):
         :param fieldname: FA fieldname
         :param getdata: if *False*, only metadata are read, the field do not
           contain data.
-        :param footprints_proxy_as_builder: if *True*, uses footprints.proxy
-          to build fields.
         """
-        if footprints_proxy_as_builder:
-            builder = fpx.field
-        else:
-            builder = H2DField
+        builders = {'H2D':H2DField,
+                    'H1D':H1DField}
         encoding = self.fieldencoding(fieldname, update_fieldscompression=True)
         # vertical geometry
         kwargs_vcoord = {'typeoffirstfixedsurface': self.geometry.vcoordinate.typeoffirstfixedsurface,
@@ -754,6 +745,7 @@ class FA(FileResource):
                ):
             term_in_seconds = datetime.timedelta(seconds=3600 * int(fieldname[2:4]))
             validity.set(term=term_in_seconds)
+        builder = builders[geometry.structure]
         field = builder(fid=fid,
                         structure=geometry.structure,
                         geometry=geometry,
