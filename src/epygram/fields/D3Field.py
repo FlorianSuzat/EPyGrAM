@@ -2169,76 +2169,6 @@ class D3Field(_D3CommonField):
             except ValueError:
                 print("'data' shape has to be compatible with field shape: {}".format(shp))
                 raise
-            """# find indexes corresponding to dimensions
-            dimensions = 0
-            indexes = {'t':0, 'z':1, 'y':2, 'x':3}
-            # t, z
-            if len(self.validity) > 1:
-                dimensions += 1
-            else:
-                indexes['t'] = None
-                for i in ('z', 'y', 'x'):
-                    indexes[i] = indexes[i] - 1
-            if self.geometry.datashape['k']:
-                dimensions += 1
-            else:
-                indexes['z'] = None
-                for i in ('y', 'x'):
-                    indexes[i] = indexes[i] - 1
-            # y, x or spectral ordering
-            if self.spectral:
-                dimensions += 1
-                dataType = "spectral"
-            else:
-                if self.geometry.datashape['j']:
-                    dimensions += 1
-                else:
-                    indexes['y'] = None
-                    for i in ('x',):
-                        indexes[i] = indexes[i] - 1
-                if self.geometry.datashape['i']:
-                    dimensions += 1
-                else:
-                    indexes['x'] = None
-                dataType = "gridpoint"
-            # check dimensions
-            assert (len(numpy.shape(data)) == dimensions
-                        or numpy.shape(data) == (1,)), \
-                    dataType + " data should be " + str(dimensions) + "D array."
-            if indexes['t'] is not None:
-                assert data.shape[0] == len(self.validity), \
-                    ' == '.join(['data.shape[0] should be len(self.validity)',
-                                 str(len(self.validity))])
-            if self.geometry.datashape['k']:
-                assert data.shape[indexes['z']] == len(self.geometry.vcoordinate.levels), \
-                    ' == '.join(['data.shape[' + str(indexes['z']) +
-                                 '] should be len(self.geometry.vcoordinate.levels)',
-                                 str(len(self.geometry.vcoordinate.levels))])
-            if not self.spectral:
-                if 'gauss' in self.geometry.name:
-                    if self.geometry.datashape['j']:
-                        assert data.shape[indexes['y']] == self.geometry.dimensions['lat_number'], \
-                            ' == '.join(['data.shape[' + str(indexes['y']) +
-                                         "] should be self.geometry.dimensions['lat_number']",
-                                         str(self.geometry.dimensions['lat_number'])])
-                    if self.geometry.datashape['i']:
-                        assert data.shape[indexes['x']] == self.geometry.dimensions['max_lon_number'], \
-                            ' == '.join(['data.shape[' + str(indexes['x']) +
-                                         "] should be self.geometry.dimensions['max_lon_number']",
-                                         str(self.geometry.dimensions['max_lon_number'])])
-                else:
-                    if self.geometry.datashape['j']:
-                        assert data.shape[indexes['y']] == self.geometry.dimensions['Y'], \
-                            ' == '.join(['data.shape[' + str(indexes['y']) +
-                                         "] should be self.geometry.dimensions['Y']",
-                                         str(self.geometry.dimensions['Y'])])
-                    if self.geometry.datashape['i']:
-                        assert data.shape[indexes['x']] == self.geometry.dimensions['X'], \
-                            ' == '.join(['data.shape[' + str(indexes['x']) +
-                                         "] should be self.geometry.dimensions['X']",
-                                         str(self.geometry.dimensions['X'])])
-            # reshape to 4D
-            data = data.reshape(shp)"""
         super(D3Field, self).setdata(data)
 
     data = property(getdata, setdata, Field.deldata,
@@ -2284,11 +2214,11 @@ class D3Field(_D3CommonField):
             k = 0
         if j is None:
             if self.geometry.datashape['j']:
-                raise epygramError("*j* is mandatory when field has a two horizontal dimensions")
+                raise epygramError("*j* is mandatory with this structure/datashape")
             j = 0
         if i is None:
             if self.geometry.datashape['i']:
-                raise epygramError("*i* is mandatory when field has one horizontal dimension")
+                raise epygramError("*i* is mandatory with this structure/datashape")
             i = 0
 
         i, j = as_numpy_array(i).flatten(), as_numpy_array(j).flatten()
@@ -2716,11 +2646,11 @@ class D3VirtualField(_D3CommonField):
             k = 0
         if j is None:
             if self.geometry.datashape['j']:
-                raise epygramError("*j* is mandatory when field has a two horizontal dimensions")
+                raise epygramError("*j* is mandatory with this structure/datashape")
             j = 0
         if i is None:
             if self.geometry.datashape['i']:
-                raise epygramError("*i* is mandatory when field has one horizontal dimension")
+                raise epygramError("*i* is mandatory with this structure/datashape")
             i = 0
 
         i, j = as_numpy_array(i).flatten(), as_numpy_array(j).flatten()

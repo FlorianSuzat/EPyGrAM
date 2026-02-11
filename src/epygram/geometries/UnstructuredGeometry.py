@@ -155,10 +155,12 @@ class UnstructuredGeometry(RectangularGridGeometry):
                 raise epygramError("No point found with these coordinates.")
             elif len(where[0]) > 1:
                 raise epygramError("Several points have the same coordinates.")
-            if self.datashape['j']:
+            if self.datashape['j'] and self.datashape['i']:
                 i[n], j[n] = where[::-1]
-            else:
+            elif self.datashape['i']:
                 i[n] = where[0]
+            elif self.datashape['j']:
+                j[n] = where[0]
         return (i.squeeze(), j.squeeze())
 
     def nearest_points(self, lon, lat, request,

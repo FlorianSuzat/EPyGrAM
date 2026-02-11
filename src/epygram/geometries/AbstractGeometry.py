@@ -123,11 +123,17 @@ class Geometry(RecursiveObject):
         if self.structure == "3D":
             return {'k': True, 'j':True, 'i':True}
         elif self.structure == "V2D":
-            return {'k': True, 'j':False, 'i':True}
+            if self.dimensions['X'] > 1:
+                return {'k': True, 'j':False, 'i':True}
+            elif self.dimensions['Y'] > 1:
+                return {'k':True, 'j':True, 'i':False}
         elif self.structure == "H2D":
             return {'k': False, 'j':True, 'i':True}
         elif self.structure == "H1D":
-            return {'k':False, 'j':True, 'i':False}
+            if self.dimensions['X'] > 1:
+                return {'k':False, 'j':False, 'i':True}
+            elif self.dimensions['Y'] > 1:
+                return {'k':False, 'j':True, 'i':False}
         elif self.structure == "V1D":
             return {'k': True, 'j':False, 'i':False}
         elif self.structure == "Point":
@@ -1047,9 +1053,9 @@ class RectangularGridGeometry(Geometry):
         :param subzone: considers only a subzone among ('C', 'CI') of the domain.
         """
         if self.datashape['j'] and j is None:
-            raise epygramError("*j* is mandatory when field has a two horizontal dimensions")
+            raise epygramError("*j* is mandatory with this structure/datashape")
         if self.datashape['i'] and i is None:
-            raise epygramError("*i* is mandatory when field has one horizontal dimension")
+            raise epygramError("*i* is mandatory with this structure/datashape")
 
         (Xmin, Ymin) = self.gimme_corners_ij(subzone)['ll']
         (Xmax, Ymax) = self.gimme_corners_ij(subzone)['ur']
