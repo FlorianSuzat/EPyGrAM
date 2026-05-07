@@ -92,7 +92,7 @@ features = [
             ]
 extra_formats = [
     "h5py",
-    "pillow >= 5.4.1"
+    "pillow >= 12.2.0"
                  ]
 all = [
     "cartopy==0.23.0",  # versions older than 0.21.0 not compatible with python 3.10; more recent versions to be tested
