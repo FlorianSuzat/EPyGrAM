@@ -1391,12 +1391,27 @@ class _D3CommonField(Field):
                         the data resp. on the C or C+I zone.
                         Default is no subzone, i.e. the whole field.
         """
-        return {'min':self.min(subzone=subzone),
-                'max':self.max(subzone=subzone),
-                'mean':self.mean(subzone=subzone),
-                'std':self.std(subzone=subzone),
-                'quadmean':self.quadmean(subzone=subzone),
-                'nonzero':self.nonzero(subzone=subzone)}
+        raw = self.getdata(subzone=subzone)
+        has_mask = isinstance(raw, numpy.ma.MaskedArray) and raw.mask.any()
+        arr = numpy.asarray(raw.filled(numpy.nan) if has_mask
+                            else raw, dtype=float)
+        outside = numpy.abs(arr) > config.mask_outside
+        has_outside = outside.any()
+        if has_outside:
+            arr = arr.copy()
+            arr[outside] = numpy.nan
+        if has_mask or has_outside:
+            valid = arr.ravel()[~numpy.isnan(arr.ravel())]
+        else:
+            valid = arr.ravel()
+        m = float(valid.mean())
+        s = float(valid.std())
+        return {'min': float(valid.min()),
+                'max': float(valid.max()),
+                'mean': m,
+                'std': s,
+                'quadmean': float(numpy.sqrt(s * s + m * m)),
+                'nonzero': int(numpy.count_nonzero(numpy.abs(valid) > config.epsilon))}
 
     def min(self, subzone=None):
         """Returns the minimum value of data."""
